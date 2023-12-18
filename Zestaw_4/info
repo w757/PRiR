@@ -1,0 +1,42 @@
+zruwnleglamy wszystko co sie da 
+
+interesuje nas tylko polik simulation.cpp
+
+wynik programu ruwnoleglego i synch na byc taki sam 
+
+
+nie chodzi o optymalizacje kodu - szybkoasc ma wynikac ze zrownoleglenia a nie optymalizacji algorymu 
+
+nie zmieniamy liczby stworzonych watkow
+
+
+
+c++ -fopenmp  OpenMP.cpp
+	> export OMP_NUM_THREADS..... <cos - nie pamietam>
+./a.out
+
+1. 
+#pragma omp parallel for - przed kazda petla 
+	>to moe nie spowodowac rownego podzialu prac (np. jeden watek dostanie x a drugi 5x) - NIEZBALANSOWANIE OBCIAZENIA
+
+
+2. 
+alternatywa - dzialimy na wiele malych czesci - i te czesci na zmiane przydzielimy watkom 
+	> #pragma omp parallel for schedule( static, <wartosc "szerokosci"> 
+
+
+3. przydzielanie dynamiczne
+#pragma omp parallel for schedule( dynamic, 300)
+
+operacja licznika musi byc w sekcji krytycznej - ma nizerwoy nazut - jesli duzo zyskamy mozna stosowac ale jestli zysk jest maly to zawsze bezpieczniejszy bedzie podzial statyczny 
+
+
+4. guided - laczy opcje 2 i 3 - nie mozna go uzywac gdy na poczatku jest "duzo"
+> przydzial polaga na dzieleni na pol, na pol....
+> Nie uzywac nigdy gdy funkcja maleje 
+
+
+
+
+
+uzywac polecenia top do obserwowania procesora - jak obciazenia procesowaow skacza to mamy zle zbalansowany kod 

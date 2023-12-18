@@ -1,16 +1,16 @@
 /*
- * LifeSequentialImplementation.cpp
+ * LifeParallelImplementation.cpp
  *
  */
 #include <mpi.h>
-#include "LifeSequentialImplementation.h"
+#include "LifeParallelImplementation.h"
 
 
-LifeSequentialImplementation::LifeSequentialImplementation()
+LifeParallelImplementation::LifeParallelImplementation()
 {
 }
 
-void LifeSequentialImplementation::splitArray(int p, int r)
+void LifeParallelImplementation::splitArray(int p, int r)
     {
     
     int procs = p;
@@ -23,7 +23,7 @@ void LifeSequentialImplementation::splitArray(int p, int r)
 
 }
 
-void LifeSequentialImplementation::exchangeData(int p, int r)
+void LifeParallelImplementation::exchangeData(int p, int r)
 {
    
     int procs = p;
@@ -61,7 +61,7 @@ void LifeSequentialImplementation::exchangeData(int p, int r)
 }
 
 
-void LifeSequentialImplementation::realStep()
+void LifeParallelImplementation::realStep()
 {
     int currentState, currentPollution;
     int procs, rank;
@@ -84,7 +84,7 @@ void LifeSequentialImplementation::realStep()
     exchangeData(procs,rank);
 }
 
-void LifeSequentialImplementation::oneStep()
+void LifeParallelImplementation::oneStep()
 {
 
     int procs, rank;
@@ -97,11 +97,11 @@ void LifeSequentialImplementation::oneStep()
 	swapTables();
 }
 
-int LifeSequentialImplementation::numberOfLivingCells() {
+int LifeParallelImplementation::numberOfLivingCells() {
 	return sumTable( cells );
 }
 
-double LifeSequentialImplementation::averagePollution() {
+double LifeParallelImplementation::averagePollution() {
 	return (double)sumTable( pollution ) / size_1_squared / rules->getMaxPollution();
 }
 

@@ -1,13 +1,13 @@
 /*
- * LifeSequentialImplementation.h
+ * LifeParallelImplementation.h
  */
 
-#ifndef LIFESEQUENTIALIMPLEMENTATION_H_
-#define LIFESEQUENTIALIMPLEMENTATION_H_
+#ifndef LIFEPARALLELIMPLEMENTATION_H_
+#define LIFEPARALLELIMPLEMENTATION_H_
 
 #include "Life.h"
 
-class LifeSequentialImplementation: public Life {
+class LifeParallelImplementation: public Life {
 private:
 
 	int procs;
@@ -19,7 +19,7 @@ private:
 protected:
 	void realStep();
 public:
-	LifeSequentialImplementation();
+	LifeParallelImplementation();
 	int numberOfLivingCells();
 	double averagePollution();
 	void oneStep();
@@ -29,4 +29,4 @@ public:
 	void splitArray(int p, int r);
 };
 
-#endif /* LIFESEQUENTIALIMPLEMENTATION_H_ */
+#endif /* LifeParallelImplementation_H_ */

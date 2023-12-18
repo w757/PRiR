@@ -38,7 +38,6 @@ void lineH(Life *l, int row, int col, int length)
 		l->bringToLife(row, col + c);
 }
 
-
 void hwss(Life *l, int row, int col)
 {
 	lineH(l, row, col, 6);
@@ -53,26 +52,28 @@ void hwss(Life *l, int row, int col)
 
 void simulationInit(Life *life)
 {
-	lineH(life, 10, 30, 40);
-	lineH(life, 30, 30, 34);
-	lineH(life, 10, 10, 20);
-	// lineV(life, 100, 30, 340);
-	// lineV(life, 200, 30, 340);
-	// lineV(life, 300, 30, 340);
-	// lineV(life, 400, 30, 200);
-	// lineV(life, 600, 30, 100);
-	lineV(life, 5, 50, 31);
-	glider(life, 60, 40);
-	hwss(life, 70, 70);
-	hwss(life, 70, 80);
-	// hwss(life, 200, 200);
-	// hwss(life, 1000, 1000);
+	// lineH(life, 10, 30, 40);
+	// lineH(life, 30, 30, 34);
+	// lineH(life, 10, 10, 20);
+	// // lineV(life, 100, 30, 340);
+	// // lineV(life, 200, 30, 340);
+	// // lineV(life, 300, 30, 340);
+	// // lineV(life, 400, 30, 200);
+	// // lineV(life, 600, 30, 100);
+	// lineV(life, 5, 50, 31);
+	// glider(life, 60, 40);
+	// hwss(life, 70, 70);
+	// hwss(life, 70, 80);
+	// // hwss(life, 200, 200);
+	// // hwss(life, 1000, 1000);
+
+	lineH(life, 1, 3, 5);
 }
 
 int main(int argc, char **argv)
 {
 	const int simulationSize = 100;
-	const int steps = 10;
+	const int steps = 2;
 	double start;
 	int procs, rank;
 
@@ -95,6 +96,21 @@ int main(int argc, char **argv)
 	for (int t = 0; t < steps; t++)
 	{
 		life->oneStep();
+
+// 				for (int i=0; i<simulationSize; i++){
+// 		for (int j=0; j<simulationSize; j++){
+// 		cout << life->getCellState(i,j) ;
+
+// 		if (j==49){
+// 		cout << " ";
+// 		}
+
+
+// 		}
+// 		cout << endl;
+// }
+
+
 	}
 	life->afterLastStep();
 
@@ -118,7 +134,7 @@ int main(int argc, char **argv)
 		cout << "Simulation time  : " << (end - start) << " sek. " << endl;
 		cout << "Time per step    : " << (end - start) / steps << " sek. " << endl;
 		cout << "pollution@(10,10): " << life->getPollution(10,10) << endl;
-		cout << "cell@(10,10)     : " << life->getCellState(10,10) << endl;
+
 	}
 
 	MPI_Finalize();
