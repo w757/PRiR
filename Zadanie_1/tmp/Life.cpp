@@ -34,7 +34,7 @@ void Life::setSize(int size)
 	clearTable(pollutionNext, size);
 
 	size_t allocatedMemory = sizeof(int*) * size + sizeof(int) * size * size;
-	std::cout << "  Size - " << size << std::endl;
+	
 }
 
 void Life::bringToLife(int row, int col)

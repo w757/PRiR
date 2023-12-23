@@ -51,29 +51,60 @@ void hwss(Life *l, int row, int col)
 }
 
 void simulationInit(Life *life)
+
 {
-	// lineH(life, 10, 30, 40);
-	// lineH(life, 30, 30, 34);
-	// lineH(life, 10, 10, 20);
-	// // lineV(life, 100, 30, 340);
-	// // lineV(life, 200, 30, 340);
-	// // lineV(life, 300, 30, 340);
-	// // lineV(life, 400, 30, 200);
-	// // lineV(life, 600, 30, 100);
-	// lineV(life, 5, 50, 31);
-	// glider(life, 60, 40);
-	// hwss(life, 70, 70);
-	// hwss(life, 70, 80);
-	// // hwss(life, 200, 200);
-	// // hwss(life, 1000, 1000);
+	lineV(life, 0, 49, 2);
+	lineV(life, 10, 48, 4);
+	lineV(life, 50, 50, 4);
+
+	lineV(life, 0, 9, 99);
+	lineV(life, 0, 19, 99);
+	lineV(life, 0, 28, 99);
+	lineV(life, 0, 39, 99);
+	lineV(life, 0, 49, 99);
+	lineV(life, 0, 59, 99);
+	lineV(life, 0, 69, 99);
+	lineV(life, 0, 79, 99);
+	lineV(life, 0, 89, 99);
+
+	lineH(life, 10, 30, 40);
+	lineH(life, 10, 5, 10);
+	lineV(life, 10, 5, 10);
+	lineH(life, 30, 30, 34);
+	lineH(life, 10, 10, 20);
+	lineH(life, 80, 80, 10);
+	lineH(life, 50, 50, 10);
+	lineV(life, 80, 80, 10);
+	lineV(life, 50, 50, 10);
+
+
+		lineV(life, 5, 50, 31);
+	glider(life, 60, 40);
+	hwss(life, 70, 70);
+	hwss(life, 70, 80);
+		hwss(life, 50, 50);
+
+	
+	// lineV(life, 100, 30, 340);
+	// lineV(life, 200, 30, 340);
+	// lineV(life, 300, 30, 340);
+	// lineV(life, 400, 30, 200);
+	// lineV(life, 600, 30, 100);
+
+	// hwss(life, 200, 200);
+	// hwss(life, 1000, 1000);
 
 	lineH(life, 1, 3, 5);
+	lineH(life, 3, 4, 3);
+
+	lineH(life, 4, 8, 2);
+	lineH(life, 1, 7, 2);
 }
 
 int main(int argc, char **argv)
 {
 	const int simulationSize = 100;
-	const int steps = 2;
+	const int steps = 3;
 	double start;
 	int procs, rank;
 
@@ -133,7 +164,9 @@ int main(int argc, char **argv)
 		cout << "Simulation steps : " << steps << endl;
 		cout << "Simulation time  : " << (end - start) << " sek. " << endl;
 		cout << "Time per step    : " << (end - start) / steps << " sek. " << endl;
-		cout << "pollution@(10,10): " << life->getPollution(10,10) << endl;
+		cout << "pollution@(10,10): " << life->getPollution(3,3) << endl;
+
+
 
 	}
 
