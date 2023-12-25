@@ -2,7 +2,7 @@
 #
 #SBATCH -t 0-0:02 # time (D-HH:MM)
 #SBATCH -N 3
-#SBATCH -n 6
+#SBATCH -n 12
 #SBATCH -o slurm.%N.%j.out # STDOUT
 #SBATCH -e slurm.%N.%j.err # STDERR
 

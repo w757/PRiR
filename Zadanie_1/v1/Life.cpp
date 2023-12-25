@@ -4,7 +4,8 @@
 
 #include "Life.h"
 #include "Alloc.h"
-
+#include <stdlib.h>
+#include <iostream>
 Life::Life()
 {
 }
@@ -31,6 +32,9 @@ void Life::setSize(int size)
 	clearTable(cellsNext, size);
 	clearTable(pollution, size);
 	clearTable(pollutionNext, size);
+
+	size_t allocatedMemory = sizeof(int*) * size + sizeof(int) * size * size;
+	
 }
 
 void Life::bringToLife(int row, int col)

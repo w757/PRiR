@@ -1,5 +1,5 @@
 /*
- * LifeParallelImplementation.cpp
+ * LifeParallelImplementation.h
  */
 
 #ifndef LIFEPARALLELIMPLEMENTATION_H_
@@ -18,3 +18,4 @@ public:
 };
 
 #endif /* LIFEPARALLELIMPLEMENTATION_H_ */
+

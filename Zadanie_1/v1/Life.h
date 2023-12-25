@@ -29,6 +29,8 @@ public:
 	void bringToLife( int row, int col );
 	int getCellState( int row, int col );
 	int getPollution( int row, int col );
+	
+
 
 	int **cellsTable();
 	int **pollutionTable();

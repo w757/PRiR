@@ -24,20 +24,11 @@ void LifeParallelImplementation::exchangeData(int p, int r)
 
 
 
-    MPI_Barrier(MPI_COMM_WORLD);
 
  if ( rank > 0 ) {
         MPI_Send( cells[start_row], size, MPI_INT, rank - 1, 1, MPI_COMM_WORLD );
         MPI_Send( pollution[start_row], size, MPI_INT, rank - 1, 2, MPI_COMM_WORLD );
 	}
-
-
-
-    if ( rank < procs-1 ) {
-        MPI_Send( cells[end_row], size, MPI_INT, rank + 1, 3, MPI_COMM_WORLD );
-        MPI_Send( pollution[end_row], size, MPI_INT, rank + 1, 4, MPI_COMM_WORLD );
-    }
-
 
 
     if ( rank < procs-1 ) {
@@ -46,12 +37,17 @@ void LifeParallelImplementation::exchangeData(int p, int r)
     }
 
 
+    if ( rank < procs-1 ) {
+        MPI_Send( cells[end_row], size, MPI_INT, rank + 1, 3, MPI_COMM_WORLD );
+        MPI_Send( pollution[end_row], size, MPI_INT, rank + 1, 4, MPI_COMM_WORLD );
+    }
+
+
     if ( rank > 0 ) {
         MPI_Recv( cells[start_row - 1], size, MPI_INT, rank - 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
         MPI_Recv( pollution[start_row - 1], size, MPI_INT, rank - 1, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-
+ 
 }
 
 void LifeParallelImplementation::realStep()
@@ -77,7 +73,7 @@ void LifeParallelImplementation::realStep()
         tmp_end_row = end_row;
      
     }
-    int count =0;
+
 	for (int row = tmp_start_row; row <= tmp_end_row; row++){
 		for (int col = 1; col < size_1; col++)
 
@@ -91,30 +87,42 @@ void LifeParallelImplementation::realStep()
                 rules->nextPollution(currentState, currentPollution, pollution[row + 1][col] + pollution[row - 1][col] + pollution[row][col - 1] + pollution[row][col + 1],
                                      pollution[row - 1][col - 1] + pollution[row - 1][col + 1] + pollution[row + 1][col - 1] + pollution[row + 1][col + 1]);
         
-        count++;
+
         }
 
 	}
-     exchangeData(procs, rank);
-    //  std::cout << "rank " << rank << std::endl;
-    //   std::cout << "tmp_start_row " << tmp_start_row << std::endl;
-    //   std::cout << "tmp_end_row " << tmp_end_row << std::endl;
-    // std::cout << "count " << count << std::endl;
 
+
+    MPI_Barrier(MPI_COMM_WORLD);
+ //    exchangeData(procs, rank);
 
 }
 
 void LifeParallelImplementation::oneStep()
 {
 
+
+
+
 realStep();
-MPI_Barrier(MPI_COMM_WORLD);
+
+
+
 swapTables();
 
-afterLastStep();
 
-beforeFirstStep();
 
+MPI_Barrier(MPI_COMM_WORLD);
+
+
+
+//afterLastStep();
+    int procs, rank;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &procs);
+
+     exchangeData(procs, rank);
 
 }
 
@@ -136,19 +144,8 @@ void LifeParallelImplementation::beforeFirstStep() {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
-
-    // if (procs==0){
-    //     cells[1][1]=1;
-    // }
-    //     if (procs==1){
-    //     cells[4][0]=1;
-    // }
-    //         if (procs==2){
-    //     cells[9][0]=1;
-    // }
-
-
     if (procs != 1){
+
 
     int rows_per_process = size / procs;
     int extra_rows = size % procs;
@@ -162,7 +159,6 @@ void LifeParallelImplementation::beforeFirstStep() {
 
 
 
-
     }
     else {
     start_row = 1;
@@ -171,48 +167,94 @@ void LifeParallelImplementation::beforeFirstStep() {
     }
 
 
+
+
+    // if (procs != 1){
     
+    // int  t_data_size[procs];
+    //     int t_start_row = 0;
+    // int t_end_row = 0;
+    // int t_rows_per_process = size / procs;
+    // int t_extra_rows = size % procs;
+
+    // auto my_min = [](int a, int b) {
+    //     return a < b ? a : b;
+    // };
+
+    // t_start_row = rank * t_rows_per_process + my_min(rank, t_extra_rows);
+    // t_end_row = start_row + t_rows_per_process + (rank < t_extra_rows ? 1 : 0) - 1;
+
+    // for (int i=0; i<procs; i++){
+
+    // t_data_size[i]=size * (t_end_row - t_start_row + 1);
+
+    // for ( int row = t_start_row; row < t_end_row; row++ ) {
+    //     MPI_Bcast(cells[row], size, MPI_INT, 0, MPI_COMM_WORLD);
+    //     MPI_Bcast(pollution[row], size, MPI_INT, 0, MPI_COMM_WORLD);
+    // }
+    
+    // }
+
+
+
+    // }
+    // else {
+    // start_row = 1;
+    // end_row = size_1;
+
+    // }
+
+
+
+
+
+
+    // // "Splaszczanie" tablic do formatu jednowymiarowego dla MPI
+    // int total_size = size * size;
+    // int* flattened_cells = new int[total_size];
+    // int* flattened_pollution = new int[total_size];
+
+
+    // if (rank == 0) {
+    //     // Kopiowanie danych do buforów jednowymiarowych tylko w procesie głównym
+    //     for (int i = 0; i < size; ++i) {
+    //         for (int j = 0; j < size; ++j) {
+    //             flattened_cells[i * size + j] = cells[i][j];
+    //             flattened_pollution[i * size + j] = pollution[i][j];
+    //         }
+    //     }
+    // }
+
+    // // Rozgłaszanie danych do wszystkich procesów
+
+    // MPI_Bcast(flattened_cells, total_size, MPI_INT, 0, MPI_COMM_WORLD);
+    // MPI_Bcast(flattened_pollution, total_size, MPI_INT, 0, MPI_COMM_WORLD);
+
+
+    // //W każdym procesie, "odsplaszczanie" danych z powrotem do dwuwymiarowych tablic
+    // for (int i = 0; i < size; ++i) {
+    //     for (int j = 0; j < size; ++j) {
+    //         cells[i][j] = flattened_cells[i * size + j];
+    //         pollution[i][j] = flattened_pollution[i * size + j];
+
+    //     }
+    // }
+
+    // // Zwolnienie zasobów
+    // delete[] flattened_cells;
+    // delete[] flattened_pollution;
+
+
+    for ( int row = 0; row < size; row++ ) {
+        MPI_Bcast(cells[row], size, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(pollution[row], size, MPI_INT, 0, MPI_COMM_WORLD);
+    }
+
 
  
-// // Rozeslanie danych z procesu 0 do reszty procesow
 
 
-
-    // "Splaszczanie" tablic do formatu jednowymiarowego dla MPI
-    int total_size = size * size;
-    int* flattened_cells = new int[total_size];
-    int* flattened_pollution = new int[total_size];
-
-if (rank == 0) {
-    // Kopiowanie danych do buforów jednowymiarowych tylko w procesie głównym
-    for (int i = 0; i < size; ++i) {
-        for (int j = 0; j < size; ++j) {
-            flattened_cells[i * size + j] = cells[i][j];
-            flattened_pollution[i * size + j] = pollution[i][j];
-        }
-    }
-}
-
-// // Rozgłaszanie danych do wszystkich procesów
-MPI_Bcast(flattened_cells, total_size, MPI_INT, 0, MPI_COMM_WORLD);
-MPI_Bcast(flattened_pollution, total_size, MPI_INT, 0, MPI_COMM_WORLD);
-
- MPI_Barrier(MPI_COMM_WORLD);
-
-// W każdym procesie, "odsplaszczanie" danych z powrotem do dwuwymiarowych tablic
-for (int i = 0; i < size; ++i) {
-    for (int j = 0; j < size; ++j) {
-        cells[i][j] = flattened_cells[i * size + j];
-        pollution[i][j] = flattened_pollution[i * size + j];
-    }
-}
-
-// Zwolnienie zasobów
-delete[] flattened_cells;
-delete[] flattened_pollution;
-
-
-// // Po tej funkcjiwszystkie procesy maja ta sama tablice od procesu 0
+    // // Po tej funkcjiwszystkie procesy maja ta sama tablice od procesu 0
 
 
 }
@@ -338,6 +380,10 @@ void LifeParallelImplementation::afterLastStep() {
                 cells[row][col] = global_flattened_cells[i];
                 pollution[row][col] = global_flattened_pollution[i];
                 i++;       
+                                if (cells[row][col]>10000){
+                        std::cout << cells[row][col];
+                        std::cout << " row " << row << " col " << col;
+            }
             }
 
         }
@@ -393,5 +439,7 @@ void LifeParallelImplementation::afterLastStep() {
 //             }
 
 // }
+
+
 
 }
