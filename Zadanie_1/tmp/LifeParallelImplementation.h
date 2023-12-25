@@ -20,6 +20,7 @@ private:
     int end_row;   
 
 
+
 protected:
 	void realStep();
 public:

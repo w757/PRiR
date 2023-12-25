@@ -26,33 +26,69 @@ void LifeParallelImplementation::exchangeData(int p, int r)
 
     MPI_Barrier(MPI_COMM_WORLD);
 
+
  if ( rank > 0 ) {
-        MPI_Send( cells[start_row], size, MPI_INT, rank - 1, 1, MPI_COMM_WORLD );
-        MPI_Send( pollution[start_row], size, MPI_INT, rank - 1, 2, MPI_COMM_WORLD );
+        MPI_Send( &cells[start_row][0], size, MPI_INT, rank - 1, 1, MPI_COMM_WORLD );
+        MPI_Send( &pollution[start_row][0], size, MPI_INT, rank - 1, 2, MPI_COMM_WORLD );
 	}
 
 
 
     if ( rank < procs-1 ) {
-        MPI_Send( cells[end_row], size, MPI_INT, rank + 1, 3, MPI_COMM_WORLD );
-        MPI_Send( pollution[end_row], size, MPI_INT, rank + 1, 4, MPI_COMM_WORLD );
+        MPI_Send( &cells[end_row][0], size, MPI_INT, rank + 1, 3, MPI_COMM_WORLD );
+        MPI_Send( &pollution[end_row][0], size, MPI_INT, rank + 1, 4, MPI_COMM_WORLD );
     }
 
 
 
     if ( rank < procs-1 ) {
-        MPI_Recv( cells[end_row + 1], size, MPI_INT, rank + 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-        MPI_Recv( pollution[end_row + 1], size, MPI_INT, rank + 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+        MPI_Recv( &cells[end_row + 1][0], size, MPI_INT, rank + 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+        MPI_Recv( &pollution[end_row + 1][0], size, MPI_INT, rank + 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
     }
+
 
 
     if ( rank > 0 ) {
-        MPI_Recv( cells[start_row - 1], size, MPI_INT, rank - 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
-        MPI_Recv( pollution[start_row - 1], size, MPI_INT, rank - 1, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+        MPI_Recv( &cells[start_row - 1][0], size, MPI_INT, rank - 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+        MPI_Recv( &pollution[start_row - 1][0], size, MPI_INT, rank - 1, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
     }
-    MPI_Barrier(MPI_COMM_WORLD);
+
+
+    // if ( rank > 0 ) {
+    //     MPI_Send( &cells[0][start_row], size, MPI_INT, rank - 1, 1, MPI_COMM_WORLD );
+    //     MPI_Send( &pollution[0][start_row], size, MPI_INT, rank - 1, 2, MPI_COMM_WORLD );
+    //    // std::cout <<rank << "send " << &cells[0][start_row] << "  ";
+	// }
+
+
+
+    // if ( rank < procs-1) {
+    //     MPI_Send( &cells[0][end_row], size, MPI_INT, rank + 1, 3, MPI_COMM_WORLD );
+    //     MPI_Send( &pollution[0][end_row], size, MPI_INT, rank + 1, 4, MPI_COMM_WORLD );
+    //   //  std::cout <<rank << "send " << &cells[0][end_row] << "  " ;
+    // }
+
+
+
+    // if ( rank < procs-1 ) {
+    //     MPI_Recv( &cells[0][end_row + 1], size, MPI_INT, rank + 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    //     MPI_Recv( &pollution[0][end_row + 1], size, MPI_INT, rank + 1, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    //   //  std::cout << rank << "rec " << &cells[0][end_row + 1] << "  " ;
+    // }
+
+
+
+    // if ( rank > 0 ) {
+    //     MPI_Recv( &cells[0][start_row - 1], size, MPI_INT, rank - 1, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    //     MPI_Recv( &pollution[0][start_row - 1], size, MPI_INT, rank - 1, 4, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
+    //    // std::cout << rank << "rec " << &cells[0][start_row - 1] << "  " ;
+    // }
+
+
+     MPI_Barrier(MPI_COMM_WORLD);
 
 }
+
 
 void LifeParallelImplementation::realStep()
 {
@@ -63,23 +99,25 @@ void LifeParallelImplementation::realStep()
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
     int tmp_end_row = 0;
     int tmp_start_row =0;
-    if (start_row==0){
-        tmp_start_row = start_row+1;
+    if (start_row!=0){
+        tmp_start_row = start_row-1;
     }
     else{
         tmp_start_row = start_row;
     }
-    if (end_row==size_1){
-        tmp_end_row = end_row-1;
+    if (end_row!=size_1){
+        tmp_end_row = end_row+1;
         
     }
     else{
         tmp_end_row = end_row;
      
     }
-    int count =0;
-	for (int row = tmp_start_row; row <= tmp_end_row; row++){
-		for (int col = 1; col < size_1; col++)
+
+	for (int row = 1; row < size_1; row++){
+		for (int col = tmp_start_row; col < tmp_end_row; col++)
+	// for (int row = start_row; row < end_row; row++){
+	// 	for (int col = 1; col < size_1; col++)
 
 
         {
@@ -91,29 +129,38 @@ void LifeParallelImplementation::realStep()
                 rules->nextPollution(currentState, currentPollution, pollution[row + 1][col] + pollution[row - 1][col] + pollution[row][col - 1] + pollution[row][col + 1],
                                      pollution[row - 1][col - 1] + pollution[row - 1][col + 1] + pollution[row + 1][col - 1] + pollution[row + 1][col + 1]);
         
-        count++;
         }
 
 	}
      exchangeData(procs, rank);
-    //  std::cout << "rank " << rank << std::endl;
-    //   std::cout << "tmp_start_row " << tmp_start_row << std::endl;
-    //   std::cout << "tmp_end_row " << tmp_end_row << std::endl;
-    // std::cout << "count " << count << std::endl;
 
+
+std::cout << std::endl;
+
+    std::cout <<  "s " <<start_row<<  std::endl;
+     std::cout <<  "e " <<end_row<<  std::endl;
+    exchangeData(procs,rank);
+    for (int i = 1; i<size_1; i++){
+    for (int j = start_row; j<end_row; j++){
+        
+        std::cout <<  cells[i][j];
+
+    }
+     std::cout <<  std::endl;
+    }
+
+std::cout <<  std::endl;
 
 }
 
 void LifeParallelImplementation::oneStep()
 {
 
-realStep();
-MPI_Barrier(MPI_COMM_WORLD);
-swapTables();
+//   realStep();
 
-afterLastStep();
+//  // MPI_Barrier(MPI_COMM_WORLD); //
+// swapTables();
 
-beforeFirstStep();
 
 
 }
@@ -132,20 +179,18 @@ double LifeParallelImplementation::averagePollution() {
 
 void LifeParallelImplementation::beforeFirstStep() {
 
+
     int rank, procs;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
+    if (rank == 0){
+cells[0][0]=7;
+cells[9][9]=1;
+}
 
-    // if (procs==0){
-    //     cells[1][1]=1;
-    // }
-    //     if (procs==1){
-    //     cells[4][0]=1;
-    // }
-    //         if (procs==2){
-    //     cells[9][0]=1;
-    // }
+
+//  // podzial tabeli na liczbe procesow 
 
 
     if (procs != 1){
@@ -211,6 +256,7 @@ for (int i = 0; i < size; ++i) {
 delete[] flattened_cells;
 delete[] flattened_pollution;
 
+    
 
 // // Po tej funkcjiwszystkie procesy maja ta sama tablice od procesu 0
 
@@ -222,12 +268,22 @@ delete[] flattened_pollution;
 
 void LifeParallelImplementation::afterLastStep() {
 
-    MPI_Barrier(MPI_COMM_WORLD); 
 
 
     int rank, procs;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
+
+
+
+    if (rank == 1){
+        cells[4][4]=5;
+    }
+
+    if (rank == 2){
+        cells[9][3]=3;
+        cells[5][5]=3;
+    }
 
 
 
@@ -253,6 +309,13 @@ void LifeParallelImplementation::afterLastStep() {
     }
 
 
+
+// std::cout << "rank" << rank << std::endl;
+// std::cout << "start" << start_row << std::endl;
+// std::cout << "end" << end_row << std::endl;
+// std::cout << "data_size[i]" << data_size[rank] << std::endl;
+// OK
+
    if (procs != 1){
 
 
@@ -262,7 +325,7 @@ void LifeParallelImplementation::afterLastStep() {
 
     int local_data_size = size * (end_row - start_row + 1);
     int* local_flattened_cells = new int[local_data_size];
-    int* local_flattened_pollution = new int[local_data_size]; //
+    // int* local_flattened_pollution = new int[local_data_size];
 
 
 
@@ -275,7 +338,7 @@ void LifeParallelImplementation::afterLastStep() {
     }
 
         global_flattened_cells = new int[tmp_sum];
-        global_flattened_pollution = new int[tmp_sum]; //
+        //global_flattened_pollution = new int[procs * local_data_size];
     }
 
 
@@ -283,7 +346,7 @@ void LifeParallelImplementation::afterLastStep() {
     for (int i = 0; i < (end_row - start_row+1); ++i) {
         for (int j = 0; j < size; ++j) {
             local_flattened_cells[i * size + j] = cells[start_row + i][j];
-            local_flattened_pollution[i * size + j] = pollution[start_row + i][j];
+        //    local_flattened_pollution[i * size + j] = pollution[start_row + i][j];
         }
     }
 
@@ -308,7 +371,17 @@ void LifeParallelImplementation::afterLastStep() {
         }
     
     
+    if (rank == 0){
+        // recvcounts[0]=40;
+        // recvcounts[1]=30;
+        // recvcounts[2]=30;
 
+
+        // displs[0]=0;
+        // displs[1]=40;
+        // displs[2]=70;
+
+    }
     }
 
 
@@ -317,81 +390,52 @@ void LifeParallelImplementation::afterLastStep() {
                 global_flattened_cells, recvcounts, displs, MPI_INT,
                 0, MPI_COMM_WORLD);
 
-    MPI_Gatherv(local_flattened_pollution, local_data_size, MPI_INT,
-                global_flattened_pollution, recvcounts, displs, MPI_INT,
-                0, MPI_COMM_WORLD);
 
- 
     if (rank == 0) {
+        // Proces główny posiada teraz wszystkie dane w global_flattened_cells
         free(recvcounts);
         free(displs);
     }
 
 
 
-// "odsplaszczanie danych"
+    // std::cout << "rank" << rank << std::endl;
+
+    // if (rank == 0) {
+    // }
+    // if (rank == 1) {
+    //     sleep(2);
+    // }
+    // if (rank == 2) {
+    //     sleep(4);
+    // }
+
+
+
+
     if (rank == 0) {
-        int i =0;
-        for (int row = 0; row < size; ++row) {
-            for (int col = 0; col < size; ++col) {
+        std::cout << "rank" << rank << std::endl;
+            std::cout << std::endl;
+        for (int i = 0; i < (size)*(size); ++i) {
 
-                cells[row][col] = global_flattened_cells[i];
-                pollution[row][col] = global_flattened_pollution[i];
-                i++;       
-            }
-
+            
+            //    local_flattened_pollution[i * size + j] = pollution[start_row + i][j];
+            std::cout << global_flattened_cells[i];
+            
         }
+    }
 
 
 
-        // for (int i = 0; i < procs; ++i) {
-        //      std::cout << " pkp " << std::endl;
-        //     for (int j = 0; j < data_size[i]; ++j) {
-        //         int row = (i *  data_size[i] / size) + (j / size);
-        //         int col = j % size;
-        //         cells[row][col] = global_flattened_cells[i *  data_size[i] + j];
-        //         pollution[row][col] = global_flattened_pollution[i *  data_size[i] + j];
-        //     //    std::cout << cells[row][col];           
-        //     }
-
-        // }
 
 
 
-//  std::cout << "rank" << rank << std::endl;
 
-//    }
 
-//  std::cout << "rank" << rank << std::endl;
-// int counter =0;
-//             for (int j = 0; j < size*size; ++j){
-//                 std::cout << global_flattened_cells[j];
-//                 counter = counter+1;
-//                 if (counter==10){
-//                       std::cout << std::endl;
-//                       counter = 0;
-//                 }
-
-//             }
-
-           
 
 
    }
 
 
-}
-
-// if (rank==0){
-//             for (int i = 0; i < size; ++i) {
-//             for (int j = 0; j < size; ++j){
-
-//                 std::cout << " "<<cells[i][j]<<" ";
-//             }
-
-//                 std::cout << std::endl;
-//             }
-
-// }
 
 }

@@ -85,26 +85,30 @@ void simulationInit(Life *life)
 		hwss(life, 50, 50);
 
 	
-	// lineV(life, 100, 30, 340);
-	// lineV(life, 200, 30, 340);
-	// lineV(life, 300, 30, 340);
-	// lineV(life, 400, 30, 200);
-	// lineV(life, 600, 30, 100);
+	lineV(life, 100, 30, 340);
+	lineV(life, 200, 30, 340);
+	lineV(life, 300, 30, 340);
+	lineV(life, 400, 30, 200);
+	lineV(life, 600, 30, 100);
 
-	// hwss(life, 200, 200);
-	// hwss(life, 1000, 1000);
+	hwss(life, 200, 200);
+	hwss(life, 1000, 1000);
 
 	lineH(life, 1, 3, 5);
 	lineH(life, 3, 4, 3);
 
 	lineH(life, 4, 8, 2);
 	lineH(life, 1, 7, 2);
+	lineH(life, 7, 7, 2);
+	lineH(life, 5, 5, 2);
+	lineV(life, 1, 1, 2);
+	lineV(life, 4, 4, 3);
 }
 
 int main(int argc, char **argv)
 {
-	const int simulationSize = 100;
-	const int steps = 3;
+	const int simulationSize = 2000;
+	const int steps = 200;
 	double start;
 	int procs, rank;
 
@@ -128,18 +132,7 @@ int main(int argc, char **argv)
 	{
 		life->oneStep();
 
-// 				for (int i=0; i<simulationSize; i++){
-// 		for (int j=0; j<simulationSize; j++){
-// 		cout << life->getCellState(i,j) ;
 
-// 		if (j==49){
-// 		cout << " ";
-// 		}
-
-
-// 		}
-// 		cout << endl;
-// }
 
 
 	}
