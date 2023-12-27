@@ -19,6 +19,7 @@ void Simulation::initialize(DataSupplier *supplier) {
 	particles = supplier->points();
 	allocateMemory();
 
+	#pragma omp parallel for
 	for (int idx = 0; idx < particles; idx++) {
 		x[idx] = supplier->x(idx);
 		y[idx] = supplier->y(idx);
@@ -49,6 +50,7 @@ void Simulation::updateVelocity() {
 	double oldFx, oldFy;
 	double dx, dy, distance, frc;
 
+	#pragma omp parallel for private(oldFx, oldFy, dx, dy, distance, frc)
 	for (int idx = 0; idx < particles; idx++) {
 		oldFx = Fx[idx];
 		oldFy = Fy[idx];
@@ -82,6 +84,7 @@ void Simulation::updateVelocity() {
 }
 
 void Simulation::updatePosition() {
+	#pragma omp parallel for
 	for (int idx = 0; idx < particles; idx++) {
 		x[idx] += dt * (Vx[idx] + dt_2 * Fx[idx] / m[idx]);
 		y[idx] += dt * (Vy[idx] + dt_2 * Fy[idx] / m[idx]);
@@ -90,6 +93,7 @@ void Simulation::updatePosition() {
 
 void Simulation::preventMoveAgainstForce() {
 	double dotProduct;
+	#pragma omp parallel for private(dotProduct)
 	for (int idx = 0; idx < particles; idx++) {
 		dotProduct = Vx[idx] * Fx[idx] + Vy[idx] * Fy[idx];
 		if (dotProduct < 0.0) {
@@ -101,6 +105,7 @@ void Simulation::preventMoveAgainstForce() {
 double Simulation::Ekin() {
 	double ek = 0.0;
 
+	#pragma omp parallel for reduction(+:ek)
 	for (int idx = 0; idx < particles; idx++) {
 		ek += m[idx] * (Vx[idx] * Vx[idx] + Vy[idx] * Vy[idx]) * 0.5;
 	}
@@ -117,6 +122,7 @@ void Simulation::pairDistribution(double *histogram, int size, double coef) {
 	double distance;
 	int idx;
 
+	#pragma omp parallel for private(dx, dy, distance, idx)
 	for (int idx1 = 0; idx1 < particles; idx1++) {
 		for (int idx2 = 0; idx2 < idx1; idx2++) {
 			dx = x[idx2] - x[idx1];
@@ -125,6 +131,7 @@ void Simulation::pairDistribution(double *histogram, int size, double coef) {
 			if (distance < maxDistanceSQ) {
 				distance = sqrt(distance);
 				idx = (int) (distance / coef);
+				#pragma omp atomic
 				histogram[idx]++;
 			}
 		}
@@ -139,6 +146,7 @@ void Simulation::pairDistribution(double *histogram, int size, double coef) {
 double Simulation::avgMinDistance() {
 	double sum = { };
 
+	#pragma omp parallel for reduction(+:sum)
 	for (int i = 0; i < particles; i++)
 		sum += minDistance(i);
 
@@ -152,6 +160,7 @@ double Simulation::minDistance(int idx) {
 	double xx = x[idx];
 	double yy = y[idx];
 
+	#pragma omp parallel for private(dx, dy, distanceSQ)
 	for (int i = 0; i < idx; i++) {
 		dx = xx - x[i];
 		dy = yy - y[i];
@@ -172,4 +181,3 @@ double Simulation::minDistance(int idx) {
 
 Simulation::~Simulation() {
 }
-
