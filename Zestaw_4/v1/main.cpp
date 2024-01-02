@@ -10,7 +10,7 @@
 #include "Simulation.h"
 #include "DataSupplier.h"
 #include "SimpleDataSupplier.h"
-
+#include <chrono>
 #include <iostream>
 
 using namespace std;
@@ -33,6 +33,7 @@ void showReport(int i, Simulation *s, double *v);
 
 int main(int argc, char **argv) {
 
+ 
 	double *v = new double[HISTOGRAM_SIZE];
 
 	Force *force = new MyForce();
@@ -50,14 +51,26 @@ int main(int argc, char **argv) {
 		}
 		simulation->step();
 	}
+
+
+
 	showReport(STEPS, simulation, v);
+
+
 }
 
 void showReport(int step, Simulation *s, double *v) {
+
 	s->pairDistribution(v, HISTOGRAM_SIZE, HISTOGRAM_LENGTH_PER_BIN);
+
+	//std::cout << "-----" << std::endl;
+
+
 	cout << "Step: " << step << " Ekin = " << s->Ekin()
 			<< " <min(NNdistance)> = " << s->avgMinDistance() << endl;
-	for (int j = 0; j < HISTOGRAM_SIZE; j++) {
-		cout << "v[" << j << "] = " << v[j] << endl;
-	}
+	//s->Ekin();
+	//s->avgMinDistance();
+	 for (int j = 0; j < HISTOGRAM_SIZE; j++) {
+	 	cout << "v[" << j << "] = " << v[j] << endl;
+	 }
 }
