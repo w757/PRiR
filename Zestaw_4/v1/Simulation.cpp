@@ -144,7 +144,27 @@ void Simulation::pairDistribution(double *histogram, int size, double coef) {
 //	#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size]) //best
 //	auto start = std::chrono::high_resolution_clock::now();	
 //	#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size]) schedule(guided, 20)
-	#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size])
+/*
+
+#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size])
+
+real    100.79s
+user    589.70s
+sys     0.69s
+cpu     585%
+
+*/
+/*
+#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size]) schedule(guided, 50)
+
+real    95.76s
+user    564.83s
+sys     0.39s
+cpu     590%
+
+*/
+
+	#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size]) schedule(guided, 60)
 	for (int idx1 = 0; idx1 < particles; idx1++) {
 
 	//		cout << "particles " << particles  << endl;
