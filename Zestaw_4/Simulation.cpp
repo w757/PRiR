@@ -8,6 +8,10 @@
 #include "Simulation.h"
 #include <math.h>
 #include <iostream>
+#include <omp.h>
+#include <iostream>
+#include <chrono>
+
 
 using namespace std;
 
@@ -25,6 +29,7 @@ void Simulation::initialize(DataSupplier *supplier) {
 	particles = supplier->points();
 	allocateMemory();
 
+	#pragma omp parallel for
 	for (int idx = 0; idx < particles; idx++) {
 		x[idx] = supplier->x(idx);
 		y[idx] = supplier->y(idx);
@@ -50,15 +55,27 @@ void Simulation::step() {
 		preventMoveAgainstForce();
 }
 
+
 void Simulation::updateVelocity() {
 
 	double oldFx, oldFy;
 	double dx, dy, distance, frc;
+	    double localFx = 0.0;
+    double localFy = 0.0;
 
+//	#pragma omp parallel for private(oldFx, oldFy, dx, dy, distance, frc)
+	//#pragma omp parallel for private(oldFx, oldFy, dx, dy, distance, frc) shared(x, y, Fx, Fy, Vx, Vy)
+
+	//#pragma omp parallel for private(oldFx, oldFy, dx, dy, distance, frc) //best
+	#pragma omp parallel for private(oldFx, oldFy, dx, dy, distance, frc) 
 	for (int idx = 0; idx < particles; idx++) {
+		//cout << "p " << particles << endl;
 		oldFx = Fx[idx];
 		oldFy = Fy[idx];
 		Fx[idx] = Fy[idx] = 0.0;
+
+		//cout << "idx " << idx << endl;
+
 		for (int idx2 = 0; idx2 < idx; idx2++) {
 			dx = x[idx2] - x[idx];
 			dy = y[idx2] - y[idx];
@@ -70,6 +87,7 @@ void Simulation::updateVelocity() {
 			Fx[idx] += frc * dx / distance;
 			Fy[idx] += frc * dy / distance;
 		}
+
 
 		for (int idx2 = idx+1; idx2 < particles; idx2++) {
 			dx = x[idx2] - x[idx];
@@ -85,9 +103,13 @@ void Simulation::updateVelocity() {
 		Vx[idx] += dt_2 * (Fx[idx] + oldFx) / m[idx];
 		Vy[idx] += dt_2 * (Fy[idx] + oldFy) / m[idx];
 	}
+
+
 }
 
+
 void Simulation::updatePosition() {
+	#pragma omp parallel for
 	for (int idx = 0; idx < particles; idx++) {
 		x[idx] += dt * (Vx[idx] + dt_2 * Fx[idx] / m[idx]);
 		y[idx] += dt * (Vy[idx] + dt_2 * Fy[idx] / m[idx]);
@@ -96,6 +118,7 @@ void Simulation::updatePosition() {
 
 void Simulation::preventMoveAgainstForce() {
 	double dotProduct;
+	#pragma omp parallel for private(dotProduct)
 	for (int idx = 0; idx < particles; idx++) {
 		dotProduct = Vx[idx] * Fx[idx] + Vy[idx] * Fy[idx];
 		if (dotProduct < 0.0) {
@@ -104,17 +127,11 @@ void Simulation::preventMoveAgainstForce() {
 	}
 }
 
-double Simulation::Ekin() {
-	double ek = 0.0;
 
-	for (int idx = 0; idx < particles; idx++) {
-		ek += m[idx] * (Vx[idx] * Vx[idx] + Vy[idx] * Vy[idx]) * 0.5;
-	}
-
-	return ek;
-}
+////////////////
 
 void Simulation::pairDistribution(double *histogram, int size, double coef) {
+	#pragma omp parallel for
 	for (int i = 0; i < size; i++)
 		histogram[i] = 0;
 
@@ -123,7 +140,36 @@ void Simulation::pairDistribution(double *histogram, int size, double coef) {
 	double distance;
 	int idx;
 
+
+//	#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size]) //best
+//	auto start = std::chrono::high_resolution_clock::now();	
+//	#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size]) schedule(guided, 20)
+/*
+
+#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size])
+
+real    100.79s
+user    589.70s
+sys     0.69s
+cpu     585%
+
+*/
+/*
+#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size]) schedule(guided, 50)
+
+real    95.76s
+user    564.83s
+sys     0.39s
+cpu     590%
+
+*/
+
+	#pragma omp parallel for private(dx, dy, distance, idx) reduction(+:histogram[:size]) schedule(guided, 60)
 	for (int idx1 = 0; idx1 < particles; idx1++) {
+
+	//		cout << "particles " << particles  << endl;
+
+
 		for (int idx2 = 0; idx2 < idx1; idx2++) {
 			dx = x[idx2] - x[idx1];
 			dy = y[idx2] - y[idx1];
@@ -135,16 +181,28 @@ void Simulation::pairDistribution(double *histogram, int size, double coef) {
 			}
 		}
 	}
+//	auto stop = std::chrono::high_resolution_clock::now(); // Zakończenie pomiaru czasu.
 
+ //   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+ //   std::cout << duration.count() << std::endl;
+
+
+
+
+    #pragma omp critical
+
+	#pragma omp parallel for
 	for (int i = 0; i < size; i++) {
 		distance = (i + 0.5) * coef;
 		histogram[i] *= 1.0 / (2.0 * M_PI * distance * coef);
 	}
+
 }
 
 double Simulation::avgMinDistance() {
 	double sum = { };
 
+    #pragma omp parallel for reduction(+:sum)
 	for (int i = 0; i < particles; i++)
 		sum += minDistance(i);
 
@@ -158,6 +216,7 @@ double Simulation::minDistance(int idx) {
 	double xx = x[idx];
 	double yy = y[idx];
 
+    #pragma omp parallel for private(dx, dy, distanceSQ) reduction(min:dSqMin)
 	for (int i = 0; i < idx; i++) {
 		dx = xx - x[i];
 		dy = yy - y[i];
@@ -165,6 +224,8 @@ double Simulation::minDistance(int idx) {
 		if (distanceSQ < dSqMin)
 			dSqMin = distanceSQ;
 	}
+
+	#pragma omp parallel for private(dx, dy, distanceSQ) reduction(min:dSqMin)
 	for (int i = idx + 1; i < particles; i++) {
 		dx = xx - x[i];
 		dy = yy - y[i];
@@ -175,6 +236,19 @@ double Simulation::minDistance(int idx) {
 
 	return sqrt(dSqMin);
 }
+
+///
+
+double Simulation::Ekin() {
+	double ek = 0.0;
+
+	for (int idx = 0; idx < particles; idx++) {
+		ek += m[idx] * (Vx[idx] * Vx[idx] + Vy[idx] * Vy[idx]) * 0.5;
+	}
+
+	return ek;
+}
+
 
 Simulation::~Simulation() {
 }
